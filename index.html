@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>ÔN TẬP VÀ THI TRẮC NGHIỆM NỘI DUNG NGHỊ QUYẾT ĐẠI HỘI XIV</title>
+  <title>TRẮC NGHIỆM NGHỊ QUYẾT ĐẠI HỘI XIV</title>
   <style>
     :root{
       --bg-1:#081120;
@@ -870,11 +870,11 @@
         <div class="brand-wrap">
           <div class="crest">✦</div>
           <div>
-            <div class="eyebrow">Ứng dụng ôn luyện • HTML tự chạy trên điện thoại</div>
-            <h1>TRẮC NGHIỆM ĐẠI HỘI XIV</h1>
+            <div class="eyebrow">Ứng dụng học tập và luyện thi trắc nghiệm nội dung Đại hội XIV</div>
+            <h1>ÔN TẬP - KIỂM TRA TRẮC NGHIỆM NỘI DUNG ĐẠI HỘI XIV</h1>
             <p class="hero-subtitle">
-              Giao diện tối ưu cho điện thoại, luyện tập theo từng cụm nội dung, xem nhanh đáp án, đếm thời gian từng câu,
-              thi thử 25 câu theo đúng cơ cấu 05 cụm và phản hồi bằng âm thanh sinh động.
+              150 câu trắc nghiệm được chia làm 05 cụm nội dung để học tập, xem nhanh đáp án, đếm thời gian từng câu,
+              thi thử 25 câu và phản hồi bằng âm thanh sinh động.
             </p>
           </div>
         </div>
@@ -884,45 +884,27 @@
         </div>
       </div>
 
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="label">Tổng số câu</div>
-          <div class="value">150</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Số cụm nội dung</div>
-          <div class="value">05</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Thi thử cố định</div>
-          <div class="value">25 câu</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Tối ưu thiết bị</div>
-          <div class="value">Mobile</div>
-        </div>
-      </div>
-    </section>
+          </section>
 
     <div id="homeLayout" class="layout">
       <div class="stack">
         <section class="panel">
           <h2>NỘI DUNG ÔN TẬP</h2>
           <p class="panel-desc">
-            Mở sơ đồ từ khóa để nhìn nhanh toàn khung kiến thức, hoặc truy cập ngay toàn bộ thư mục tài liệu ôn tập.
+            Mở sơ đồ, từ khóa để nhìn nhanh toàn bộ khung kiến thức, hoặc truy cập toàn bộ thư mục tài liệu học tập.
           </p>
 
           <div class="mini-grid">
             <button class="mini-action ghost-btn" id="quickStudyBtn" type="button">
               <strong>Sơ đồ, từ khóa ôn tập nhanh</strong>
-              <span>Hiển thị nội dung theo 05 cụm, có thể kéo thanh cuộn hoặc vuốt cảm ứng để xem hết.</span>
+              <span>Hiển thị nội dung theo 05 cụm</span>
             </button>
 
             <a class="mini-action ghost-btn" id="materialsBtn"
                href="https://drive.google.com/drive/folders/1I1sHYlgnkbXJD88I-x6-BiM2GX0DUWir?usp=sharing"
                target="_blank" rel="noopener noreferrer">
               <strong>TOÀN BỘ TÀI LIỆU ÔN TẬP</strong>
-              <span>Mở thư mục Google Drive chứa tài liệu nguồn để nghiên cứu và ôn kỹ hơn.</span>
+              <span>Bao gồm Văn kiện Đại hội XIV (có kèm theo các chuyên đề) và Tài liệu theo KH40 của Đảng ủy CATƯ (150 câu hỏi trắc nghiệm và 10 video</span>
             </a>
           </div>
         </section>
@@ -997,7 +979,7 @@
         </section>
 
         <section class="panel">
-          <h2>LẦN THI THỬ NHẤT</h2>
+          <h2>KẾT QUẢ GẦN NHẤT</h2>
           <p class="panel-desc">Ứng dụng lưu lại kết quả gần nhất ngay trên thiết bị để đồng chí theo dõi tiến bộ.</p>
           <div class="notes-list" id="lastSessionBox">
             <div class="note-item">
@@ -1042,8 +1024,9 @@
           <div class="feedback-box" id="feedbackBox">Hãy chọn phương án đúng nhất.</div>
 
           <div class="session-actions">
-            <button class="danger-btn" id="exitSessionBtn" type="button">Thoát phiên hiện tại</button>
-            <button class="soft-btn" id="nextQuestionBtn" type="button" disabled>Câu tiếp theo</button>
+            	<button class="soft-btn" id="nextQuestionBtn" type="button" disabled>Câu tiếp theo</button>
+		<button class="danger-btn" id="exitSessionBtn" type="button">Kết thúc</button>
+            
           </div>
         </div>
       </div>
@@ -1076,7 +1059,7 @@
 
         <div class="result-actions">
           <button class="primary-btn" id="backHomeBtn" type="button">Về màn hình chính</button>
-          <button class="soft-btn" id="retryLastBtn" type="button">Làm lại dạng vừa học</button>
+          <button class="soft-btn" id="retryLastBtn" type="button">Thi thử lại</button>
         </div>
       </div>
     </section>
@@ -1407,7 +1390,7 @@
     }
 
     function openMockConfirm(){
-      const text = "Phần thi thử sẽ lấy ngẫu nhiên 25 câu theo đúng cơ cấu 05 cụm nội dung, mỗi cụm 05 câu. Thời gian cố định 20 giây/câu.";
+      const text = "Phần thi thử sẽ lấy ngẫu nhiên 25 câu. Thời gian cố định 20 giây/câu.";
       openModal(
         "Xác nhận bắt đầu thi thử",
         `<div class="confirm-box">${escapeHtml(text)}</div>
