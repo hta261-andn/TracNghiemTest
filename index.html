@@ -1,52 +1,147 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GD3 Auth Smoke Test</title>
-<style>body{font-family:system-ui,Arial;margin:20px;max-width:980px}input,select,button,textarea{font:inherit;padding:9px;margin:4px 0}input{width:min(460px,95%)}button{cursor:pointer}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}.ok{color:#087a2f}.bad{color:#b00020}pre{white-space:pre-wrap;word-break:break-word;background:#f6f7f8;padding:10px;border-radius:8px}@media(max-width:700px){.row{grid-template-columns:1fr}}</style></head>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GĐ6 Smoke Test — Superadmin / Export / Backup / Retention</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:1180px;margin:20px auto;padding:0 12px;background:#f6f7f9;color:#1f2937}
+h1{font-size:23px}.card{background:#fff;border:1px solid #d9dee7;border-radius:10px;padding:14px;margin:12px 0}
+input,select,button{font:inherit;padding:8px;margin:4px 2px}input[type=text],input[type=password]{min-width:310px;max-width:96%}
+button{cursor:pointer;border:1px solid #9ca3af;border-radius:7px;background:#fff}button:hover{background:#f0f2f5}
+.good{color:#087b37;font-weight:700}.bad{color:#b42318;font-weight:700}.warn{color:#9a6700;font-weight:700}.small{font-size:13px;color:#4b5563}
+pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#e5e7eb;padding:12px;border-radius:8px;max-height:680px;overflow:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.danger{border-color:#d92d20;color:#b42318}.safe{border-color:#2e7d32}
+</style>
+</head>
 <body>
-<h1>GĐ3 Authentication Smoke Test</h1>
-<p>Origin: <b id="origin"></b></p>
-<div class="card"><label>Web App /exec</label><br><input id="url" value="https://script.google.com/macros/s/AKfycby9nG75xkqsUjbGkUc64urrLtmE4kQedN9RkZgZ1qCUAaIT6_cM2nScHLyKoH8-x4je/exec"></div>
+<h1>GĐ6 — Smoke Test Superadmin, XLSX, backup & retention</h1>
+<p class="small"><b>Nguyên tắc:</b> smoke mặc định chỉ chạy thao tác an toàn: đọc, preview, TEST_EXPORT và tạo backup. Không có nút EXECUTE cho annualClose, clear dữ liệu, update kỳ hay purge thật.</p>
+
+<div class="card">
+<b>Web App TEST</b><br>
+<input id="url" type="text" value="https://script.google.com/macros/s/AKfycby9nG75xkqsUjbGkUc64urrLtmE4kQedN9RkZgZ1qCUAaIT6_cM2nScHLyKoH8-x4je/exec">
+<button onclick="health()">1. healthCheck GĐ6</button>
+</div>
+
+<div class="card">
+<b>Superadmin</b><br>
+<input id="adminLogin" type="text" value="Admin">
+<input id="adminPass" type="password" placeholder="Mật khẩu Admin hiện tại">
 <div class="row">
-<div class="card"><h3>Public / portal</h3><button onclick="health()">1. healthCheck</button><br>
-<input id="uq" value="AREA_001"><button onclick="suggest('unit')">2. suggestUnitUsers</button><br>
-<input id="aq" value="Admin"><button onclick="suggest('admin')">3. suggestAdminUsers</button><br>
-<button onclick="wrongPortal()">4. Admin → unit phải WRONG_PORTAL</button></div>
-<div class="card"><h3>Unit</h3><input id="unitLogin" placeholder="login_input unit, ví dụ AREA_001_01"><br><input id="unitPass" type="password" placeholder="Mật khẩu unit hiện tại"><br><button onclick="login('unit')">5. loginUnit</button><hr><strong>Đổi mật khẩu lần đầu</strong><br><input id="unitNewPass" type="password" placeholder="Mật khẩu mới (>=8 ký tự, hoa, thường, số, ký tự đặc biệt)"><br><button onclick="firstLoginChangePassword('unit')">5A. firstLoginChangePassword</button> <button onclick="profile('unit')">5B. getMyProfile</button></div>
+<button onclick="loginAdmin()">2. loginAdmin</button>
+<button onclick="phase6()">3. selfTestPhase6</button>
+<button onclick="previewExport()">4. previewExport TEST_EXPORT</button>
+<button class="safe" onclick="testExport()">5. TEST_EXPORT XLSX</button>
+<button onclick="exportLogs()">6. getExportLogs</button>
 </div>
 <div class="row">
-<div class="card"><h3>Admin/Superadmin</h3>
-<input id="adminLogin" value="Admin" placeholder="Admin hoặc admin được cấp"><br>
-<input id="adminPass" type="password" placeholder="Mật khẩu quản trị hiện tại"><br>
-<button onclick="login('admin')">6. loginAdmin</button> <button onclick="profile('admin')">6B. getMyProfile</button>
-<hr><strong>Đổi mật khẩu lần đầu Admin/Superadmin</strong><br>
-<input id="adminNewPass" type="password" placeholder="Mật khẩu mới (>=8 ký tự, hoa, thường, số, ký tự đặc biệt)"><br>
-<button onclick="firstLoginChangePassword('admin')">6A. firstLoginChangePassword</button>
+<button class="safe" onclick="backup()">7. exportBackupBeforeClear</button>
+<button onclick="backupList()">8. getBackupList</button>
+<button onclick="backupMeta()">9. getBackupMetadata latest</button>
 </div>
-<div class="card"><h3>Confirm token</h3><select id="who"><option value="admin">admin token</option><option value="unit">unit token</option></select><br><input id="confirmPass" type="password" placeholder="Nhập lại mật khẩu"><br><input id="scope" value="TEST_SCOPE"><br><button onclick="verifySensitive()">7. verifyPasswordForSensitiveAction</button> <button onclick="consume()">8. consumeConfirmToken</button></div>
+<div class="row">
+<button onclick="retentionPolicy()">10. checkRetentionPolicy</button>
+<button onclick="retentionDry()">11. retentionDryRun 2026</button>
+<button onclick="annualStatus()">12. getAnnualCloseStatus 2026</button>
+<button onclick="restoreGuide()">13. manualRestoreGuide</button>
 </div>
-<div class="card"><h3>Kết quả</h3><pre id="out">Chưa chạy.</pre></div>
+<div class="row">
+<button onclick="periodPreview()">14. previewPeriodConfigChange</button>
+<button onclick="regenPreview()">15. regenerateKyBaoCao PREVIEW 2027</button>
+</div>
+<span id="adminState" class="small">Chưa đăng nhập.</span>
+</div>
+
+<div class="card">
+<b>Unit cho kiểm thử vượt quyền</b><br>
+<input id="unitLogin" type="text" value="AREA_001_01">
+<input id="unitPass" type="password" placeholder="Mật khẩu Unit hiện tại">
+<div class="row">
+<button onclick="loginUnit()">U1. loginUnit</button>
+<button onclick="unitPreviewExport()">N1. Unit → previewExport</button>
+</div>
+</div>
+
+<div class="card">
+<b>Kiểm thử âm tính an toàn</b>
+<div class="row">
+<button onclick="exportNoConfirm()">N2. exportReports thiếu confirm</button>
+<button onclick="clearFakeBackup()">N3. clearData fake backup</button>
+<button onclick="archiveOpenYear()">N4. archive năm OPEN</button>
+<button onclick="invalidExportType()">N5. export_type sai</button>
+<button onclick="regenNoPreview()">N6. regenerate EXECUTE thiếu preview</button>
+</div>
+<p class="small">N3/N4 có xác minh mật khẩu và consume confirm_token nhưng backend phải dừng trước khi sửa dữ liệu.</p>
+</div>
+
+<div class="card">
+<div><b>Kết quả:</b> <span id="status">Chưa chạy.</span></div>
+<pre id="out">Chưa chạy.</pre>
+</div>
+
 <script>
-const state={unitToken:'',adminToken:'',confirmToken:'',confirmScope:''};
-document.getElementById('origin').textContent=location.origin;
-function rid(){return 'REQ_GD3_'+Date.now()+'_'+Math.random().toString(36).slice(2)}
-function safe(x){if(!x||typeof x!=='object')return x;let y=Array.isArray(x)?[]:{};for(const k in x){if(['token','confirm_token','password','password_hash','salt','token_hash','confirm_token_hash'].includes(k.toLowerCase()))y[k]='[HIDDEN]';else y[k]=safe(x[k])}return y}
-function show(label,obj){document.getElementById('out').textContent=label+'\n'+JSON.stringify(safe(obj),null,2)}
-async function api(action,{token='',portal='',payload={}}={}){const r=await fetch(document.getElementById('url').value,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,request_id:rid(),token,portal,payload,client_info:{source:'GD3_SMOKE',portal,user_agent:navigator.userAgent}})});return await r.json()}
-async function health(){show('healthCheck',await api('healthCheck'))}
-async function suggest(kind){const action=kind==='unit'?'suggestUnitUsers':'suggestAdminUsers';const q=document.getElementById(kind==='unit'?'uq':'aq').value;show(action,await api(action,{portal:kind==='unit'?'unit_portal':'admin_portal',payload:{query:q}}))}
-async function wrongPortal(){show('Admin → unit expected WRONG_PORTAL',await api('loginUnit',{portal:'unit_portal',payload:{login_input:'Admin',password:'not-used-for-wrong-portal'}}))}
-async function login(kind){const admin=kind==='admin', portal=admin?'admin_portal':'unit_portal', action=admin?'loginAdmin':'loginUnit';const login_input=document.getElementById(admin?'adminLogin':'unitLogin').value,password=document.getElementById(admin?'adminPass':'unitPass').value;const res=await api(action,{portal,payload:{login_input,password,portal}});if(res.ok&&res.data&&res.data.token)state[kind+'Token']=res.data.token;show(action,res)}
-async function firstLoginChangePassword(kind){
- const admin=kind==='admin';
- const token=state[kind+'Token'];
- const current_password=document.getElementById(admin?'adminPass':'unitPass').value;
- const new_password=document.getElementById(admin?'adminNewPass':'unitNewPass').value;
- const portal=admin?'admin_portal':'unit_portal';
- if(!token){show(kind+' firstLoginChangePassword',{ok:false,message:'Chưa có '+kind+' token. Hãy đăng nhập thành công trước.'});return}
- const res=await api('firstLoginChangePassword',{token,portal,payload:{current_password,new_password}});
- show(kind+' firstLoginChangePassword',res)
+const S={adminToken:'',unitToken:'',lastBackupExportId:'',lastBackupCode:'',lastExportId:'',lastDryRunId:''};
+function rid(p='GD6'){return 'REQ_'+p+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,10)}
+function baseUrl(){return document.getElementById('url').value.trim()}
+function safe(x){
+ const secret=/password|token|hash|salt|pepper/i;
+ function walk(v,k=''){if(secret.test(k))return '[HIDDEN]';if(Array.isArray(v))return v.map(a=>walk(a));if(v&&typeof v==='object'){const o={};Object.keys(v).forEach(key=>o[key]=walk(v[key],key));return o}return v}
+ return walk(x)
 }
-async function profile(kind){const token=state[kind+'Token'];show(kind+' getMyProfile',await api('getMyProfile',{token,portal:kind==='admin'?'admin_portal':'unit_portal',payload:{}}))}
-async function verifySensitive(){const kind=document.getElementById('who').value, token=state[kind+'Token'], portal=kind==='admin'?'admin_portal':'unit_portal', password=document.getElementById('confirmPass').value, scope=document.getElementById('scope').value;const res=await api('verifyPasswordForSensitiveAction',{token,portal,payload:{password,scope}});if(res.ok&&res.data){state.confirmToken=res.data.confirm_token||'';state.confirmScope=res.data.confirm_scope||scope}show('verifyPasswordForSensitiveAction',res)}
-async function consume(){const kind=document.getElementById('who').value, token=state[kind+'Token'], portal=kind==='admin'?'admin_portal':'unit_portal';show('consumeConfirmToken',await api('consumeConfirmToken',{token,portal,payload:{confirm_token:state.confirmToken,scope:state.confirmScope}}))}
-</script></body></html>
+function show(label,res,expect){
+ const ok=expect?expect(res):!!res?.ok, st=document.getElementById('status');
+ st.className=ok?'good':'bad';st.textContent=(ok?'PASS — ':'CHECK — ')+label;
+ document.getElementById('out').textContent=JSON.stringify(safe(res),null,2)
+}
+async function api(action,payload={},opt={}){
+ const req={action,request_id:opt.request_id||rid(action),token:opt.token||'',portal:opt.portal||'',payload,client_info:{source:'GD6_SMOKE_TEST_20260828',page_origin:location.origin}};
+ try{const r=await fetch(baseUrl(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(req)});const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,errorCode:'NON_JSON',message:t.slice(0,1500)}}}
+ catch(e){return {ok:false,errorCode:'FETCH_ERROR',message:String(e)}}
+}
+async function confirm(scope){
+ const pw=document.getElementById('adminPass').value;
+ return api('verifyPasswordForSensitiveAction',{password:pw,scope},{token:S.adminToken,portal:'admin_portal'});
+}
+async function health(){const r=await api('healthCheck');show('healthCheck GĐ6',r,x=>x.ok&&x.data?.schemaOk===true&&String(x.data?.deploymentVersion||'').includes('GD6_SUPERADMIN_EXPORT_RETENTION'))}
+async function loginAdmin(){const r=await api('loginAdmin',{login_input:document.getElementById('adminLogin').value,password:document.getElementById('adminPass').value},{portal:'admin_portal'});if(r.ok&&r.data?.token){S.adminToken=r.data.token;document.getElementById('adminState').textContent='Superadmin token lưu trong RAM.'}show('loginAdmin',r,x=>x.ok&&!!x.data?.token&&x.data?.user_summary?.role==='superadmin')}
+async function loginUnit(){const r=await api('loginUnit',{login_input:document.getElementById('unitLogin').value,password:document.getElementById('unitPass').value},{portal:'unit_portal'});if(r.ok&&r.data?.token)S.unitToken=r.data.token;show('loginUnit',r,x=>x.ok&&!!x.data?.token)}
+async function phase6(){const r=await api('selfTestPhase6',{}, {token:S.adminToken,portal:'admin_portal'});show('selfTestPhase6',r,x=>x.ok&&x.data?.ok===true&&x.data?.failed===0)}
+async function previewExport(){const r=await api('previewExport',{export_type:'TEST_EXPORT',form_code:'BM2',area_scope:'ALL',period_type:'MONTH',period_key:'2026-09',latest_only:true},{token:S.adminToken,portal:'admin_portal'});show('previewExport TEST_EXPORT',r,x=>x.ok&&x.data?.creates_file===false&&x.data?.row_count>=1)}
+async function testExport(){
+ const c=await confirm('EXPORT_REPORTS');if(!c.ok||!c.data?.confirm_token)return show('confirm EXPORT_REPORTS',c,x=>false);
+ const r=await api('exportReports',{confirm_token:c.data.confirm_token,export_type:'TEST_EXPORT',form_code:'BM2',area_scope:'ALL',period_type:'MONTH',period_key:'2026-09',latest_only:true,include_logs:false},{token:S.adminToken,portal:'admin_portal'});
+ if(r.ok){S.lastExportId=r.data?.export_id||''}
+ show('TEST_EXPORT XLSX',r,x=>x.ok&&x.data?.export_status==='SUCCESS'&&String(x.data?.file_name||'').endsWith('.xlsx')&&!!x.data?.file_url)
+}
+async function exportLogs(){const r=await api('getExportLogs',{limit:20},{token:S.adminToken,portal:'admin_portal'});show('getExportLogs',r,x=>x.ok&&Array.isArray(x.data?.exports)&&x.data.exports.length>=1)}
+async function backup(){
+ const c=await confirm('EXPORT_BACKUP');if(!c.ok||!c.data?.confirm_token)return show('confirm EXPORT_BACKUP',c,x=>false);
+ const r=await api('exportBackupBeforeClear',{confirm_token:c.data.confirm_token,export_type:'BACKUP_FULL',reason:'GD6 smoke-test backup an toàn trước clear'},{token:S.adminToken,portal:'admin_portal'});
+ if(r.ok){S.lastBackupExportId=r.data?.backup_export_id||'';S.lastBackupCode=r.data?.backup_code||''}
+ show('exportBackupBeforeClear',r,x=>x.ok&&x.data?.export_status==='SUCCESS'&&x.data?.backup_for_clear===true&&x.data?.sensitive_fields_masked===true&&String(x.data?.file_name||'').endsWith('.xlsx'))
+}
+async function backupList(){const r=await api('getBackupList',{limit:20},{token:S.adminToken,portal:'admin_portal'});if(r.ok&&r.data?.backups?.[0]){S.lastBackupExportId=S.lastBackupExportId||r.data.backups[0].backup_export_id;S.lastBackupCode=S.lastBackupCode||r.data.backups[0].backup_code}show('getBackupList',r,x=>x.ok&&Array.isArray(x.data?.backups)&&x.data.backups.length>=1)}
+async function backupMeta(){const r=await api('getBackupMetadata',{backup_export_id:S.lastBackupExportId},{token:S.adminToken,portal:'admin_portal'});show('getBackupMetadata',r,x=>x.ok&&x.data?.status==='SUCCESS'&&x.data?.backup_for_clear===true&&x.data?.sensitive_fields_masked===true)}
+async function retentionPolicy(){const r=await api('checkRetentionPolicy',{}, {token:S.adminToken,portal:'admin_portal'});show('checkRetentionPolicy',r,x=>x.ok&&x.data?.retention_years===3&&x.data?.auto_purge===false)}
+async function retentionDry(){const r=await api('retentionDryRun',{data_year:2026},{token:S.adminToken,portal:'admin_portal'});if(r.ok)S.lastDryRunId=r.data?.dry_run_id||'';show('retentionDryRun 2026',r,x=>x.ok&&x.data?.executes_delete===false&&x.data?.data_year==='2026')}
+async function annualStatus(){const r=await api('getAnnualCloseStatus',{data_year:2026},{token:S.adminToken,portal:'admin_portal'});show('getAnnualCloseStatus',r,x=>x.ok&&x.data?.years?.[0]?.year_status==='OPEN')}
+async function restoreGuide(){const r=await api('manualRestoreGuide',{backup_export_id:S.lastBackupExportId},{token:S.adminToken,portal:'admin_portal'});show('manualRestoreGuide',r,x=>x.ok&&x.data?.automatic_restore===false&&Array.isArray(x.data?.steps)&&x.data.steps.length>=5)}
+async function periodPreview(){const r=await api('previewPeriodConfigChange',{form_code:'BM2',period_type:'MONTH',period_key:'2026-09',changes:{note:'GD6_PREVIEW_ONLY'}},{token:S.adminToken,portal:'admin_portal'});show('previewPeriodConfigChange',r,x=>x.ok&&!!x.data?.preview_id&&x.data?.historical_submit_status_recalculated===false)}
+async function regenPreview(){const r=await api('regenerateKyBaoCao',{mode:'PREVIEW',data_year:2027,form_codes:['BM2'],period_types:['MONTH']},{token:S.adminToken,portal:'admin_portal'});show('regenerateKyBaoCao PREVIEW 2027',r,x=>x.ok&&x.data?.mode==='PREVIEW'&&x.data?.to_create_count===12&&x.data?.to_create?.every(p=>p.is_submission_period===true&&p.is_aggregation_period===true))}
+async function unitPreviewExport(){const r=await api('previewExport',{export_type:'TEST_EXPORT',form_code:'BM2',period_type:'MONTH',period_key:'2026-09'},{token:S.unitToken,portal:'unit_portal'});show('Unit → previewExport',r,x=>x.ok===false&&(x.errorCode==='WRONG_PORTAL'||x.errorCode==='FORBIDDEN'))}
+async function exportNoConfirm(){const r=await api('exportReports',{export_type:'TEST_EXPORT',form_code:'BM2',period_type:'MONTH',period_key:'2026-09'},{token:S.adminToken,portal:'admin_portal'});show('exportReports thiếu confirm',r,x=>x.ok===false&&(x.errorCode==='SUPERADMIN_CONFIRM_REQUIRED'||x.errorCode==='CONFIRM_TOKEN_INVALID'))}
+async function clearFakeBackup(){
+ const c=await confirm('CLEAR_DATA_AFTER_BACKUP');if(!c.ok||!c.data?.confirm_token)return show('confirm CLEAR_DATA',c,x=>false);
+ const r=await api('clearDataAfterBackup',{confirm_token:c.data.confirm_token,backup_export_id:'EXP_NOT_EXIST',data_year:2026,form_codes:['BM2'],reason:'negative smoke only'},{token:S.adminToken,portal:'admin_portal'});
+ show('clearData fake backup',r,x=>x.ok===false&&(x.errorCode==='BACKUP_NOT_FOUND'||x.errorCode==='BACKUP_REQUIRED'))
+}
+async function archiveOpenYear(){
+ const c=await confirm('ANNUAL_ARCHIVE_EXPORT');if(!c.ok||!c.data?.confirm_token)return show('confirm ANNUAL_ARCHIVE',c,x=>false);
+ const r=await api('exportAnnualArchive',{confirm_token:c.data.confirm_token,data_year:2026},{token:S.adminToken,portal:'admin_portal'});
+ show('archive năm OPEN',r,x=>x.ok===false&&x.errorCode==='YEAR_NOT_CLOSED')
+}
+async function invalidExportType(){const r=await api('previewExport',{export_type:'BAD_EXPORT'},{token:S.adminToken,portal:'admin_portal'});show('invalid export_type',r,x=>x.ok===false&&x.errorCode==='INVALID_REQUEST')}
+async function regenNoPreview(){const r=await api('regenerateKyBaoCao',{mode:'EXECUTE',data_year:2027,form_codes:['BM2'],period_types:['MONTH'],reason:'negative only'},{token:S.adminToken,portal:'admin_portal'});show('regenerate thiếu preview',r,x=>x.ok===false&&x.errorCode==='DRY_RUN_REQUIRED')}
+</script>
+</body>
+</html>
